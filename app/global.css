@@ -10,3 +10,50 @@ html {
 html:has(body[data-scroll-locked]) {
   scrollbar-gutter: auto;
 }
+
+@keyframes blobFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+:root {
+  --color-fd-background: #151515;
+}
+
+.dark {
+  --color-fd-background: #151515;
+  --color-fd-card: rgba(21, 21, 21, 0.6);
+  --color-fd-popover: rgba(25, 25, 25, 0.85);
+  --color-fd-muted: rgba(30, 30, 30, 0.6);
+  --color-fd-secondary: rgba(30, 30, 30, 0.6);
+}
+
+body {
+  background-color: #151515 !important;
+}
+
+#nd-sidebar {
+  background-color: transparent !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+header:has(nav) {
+  background-color: rgba(21, 21, 21, 0.7) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+#nd-subnav {
+  background-color: rgba(21, 21, 21, 0.7) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.fd-layout-article {
+  background-color: transparent !important;
+}

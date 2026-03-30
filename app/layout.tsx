@@ -1,6 +1,7 @@
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import './global.css';
 import localFont from 'next/font/local';
+import { BackgroundBlobs } from '@/components/background-blobs';
 
 const golosText = localFont({
   src: [
@@ -27,9 +28,12 @@ const golosText = localFont({
 
 export default function Layout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="en" className={golosText.className} suppressHydrationWarning>
+    <html lang="en" className={`${golosText.className} dark`} suppressHydrationWarning>
       <body className="flex flex-col min-h-screen">
-        <RootProvider>{children}</RootProvider>
+        <RootProvider>
+          <BackgroundBlobs />
+          {children}
+        </RootProvider>
       </body>
     </html>
   );

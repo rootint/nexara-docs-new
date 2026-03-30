@@ -1,0 +1,53 @@
+---
+title: "Поддерживаемые MIME Типы"
+description: "Узнайте, какие MIME типы поддерживаются API Nexara."
+---
+
+API Nexara для распознавания речи, в частности `/audio/transcriptions`, принимает файлы с различными MIME типами, представляющими аудио- и видеоформаты.
+
+При отправке файла через `multipart/form-data` убедитесь, что `Content-Type`, связанный с частью файла, содержит правильный формат.
+
+Ниже приведен список MIME типов, поддерживаемых в настоящее время API:
+
+**Аудиоформаты:**
+
+- **WAV:**
+  - `audio/wav`
+  - `audio/x-wav`
+  - `audio/wave`
+- **MP3:**
+  - `audio/mp3`
+  - `audio/mpeg`
+  - `audio/mpg`
+  - `audio/x-mpeg`
+- **M4A / AAC:**
+  - `audio/x-m4a`
+  - `audio/mp4`
+  - `audio/mp4a-latm`
+  - `audio/mpeg4`
+  - `audio/aac`
+- **FLAC:**
+  - `audio/flac`
+- **OGG (Vorbis/Opus):**
+  - `audio/ogg`
+  - `audio/oga`
+- **Opus:**
+  - `audio/opus`
+- **AIFF:**
+  - `audio/aiff`
+  - `audio/x-aiff`
+- **ASF:**
+  - `audio/asf`
+
+**Видеоформаты (аудио будет извлечено):**
+
+- **MP4:**
+  - `video/mp4`
+- **MOV:**
+  - `video/quicktime`
+- **AVI:**
+  - `video/x-msvideo`
+- **MKV:**
+  - `video/x-matroska`
+
+**Примечание:** Если есть конкретный MIME тип, поддержку которого вы хотели бы видеть, пожалуйста, напишите в [Поддержку](https://t.me/RND_RandoM).

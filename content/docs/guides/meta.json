@@ -1,5 +1,13 @@
 {
   "title": "Guides",
   "root": true,
-  "pages": ["index"]
+  "pages": [
+    "---Начать Работу---",
+    "index",
+    "mime-types",
+    "languages",
+    "response-formats",
+    "---Гайды---",
+    "n8n-guide"
+  ]
 }

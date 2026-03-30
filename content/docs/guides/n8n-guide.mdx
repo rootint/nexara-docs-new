@@ -1,0 +1,42 @@
+---
+title: "Гайд по n8n"
+description: "Узнайте, как использовать Nexara API в своём n8n пайплайне."
+---
+
+Вот краткое руководство по интеграции Nexara API с n8n:
+
+1.  **Добавьте узел HTTP Request:**  
+    Найдите и добавьте узел **HTTP Request** в ваш рабочий процесс n8n.
+
+    ![Search for HTTP Request Node](/images/n8n.jpg)
+
+2.  **Импортируйте команду cURL:**  
+    Нажмите на опцию "Import cURL" в настройках узла HTTP Request. Вставьте следующую команду, **не забудьте заменить `YOUR_NEXARA_API_KEY` на ваш реальный API-ключ Nexara**:
+
+    ```bash
+    curl --request POST \
+    --url https://api.nexara.ru/api/v1/audio/transcriptions \
+    --header 'Authorization: Bearer YOUR_NEXARA_API_KEY' \
+    --header 'Content-Type: multipart/form-data'
+    ```
+
+3.  **Настройте параметры тела запроса (Body Parameters):**
+
+    - Прокрутите вниз до раздела **Body** в параметрах узла.
+    - Убедитесь, что **Body Content Type** установлен как `Form-Data`.
+    - В разделе **Body Parameters** нажмите "Add Parameter".
+    - Установите **Parameter Type** в `n8n Binary File`. _Если у вас есть ссылка на файл, а не сам файл, вы можете передать его напрямую через параметр `url`_
+    - Поле **Name** задайте как `file`.
+    - Поле **Input Data Field Name** задайте как `data`. _(Это предполагает, что бинарный файл поступает из предыдущего узла, например, "Read Binary File", и доступен под полем `data`. Измените, если имя вашего поля другое.)_
+
+    ![Configure Body Parameters for File](/images/binary.jpg)
+
+4.  **Готово! (Можно добавить дополнительные параметры):**  
+    Базовая настройка завершена — узел теперь отправляет файл на транскрипцию.
+
+    - Чтобы добавить другие параметры API (например, `language` или `response_format`), добавьте новые параметры в **Body Parameters**, обычно с типом `String` в **Parameter Type**. Вот пример:  
+      ![Дополнительные параметры](/images/other.jpg)
+    - Убедитесь, что перед этим узлом HTTP Request есть узел, который читает ваш аудиофайл и делает его бинарные данные доступными (обычно под именем поля `data`). Либо отправляйте ссылку на файл через параметр `url`.
+    - Если вы хотите выполнить диаризацию (разделение на разные голоса), добавьте параметр `task` в ваш API запрос и поставьте ему значение `diarize`.
+
+    Подробнее о всех доступных параметрах API читайте в [документации API](/api-reference/create_transcription_audio_transcriptions_post).
