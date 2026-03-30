@@ -1,0 +1,382 @@
+---
+title: Быстрый старт
+description: Узнайте, как превратить ваше аудио в текст с помощью Nexara API.
+---
+
+API Аудио предоставляет один endpoint для преобразования речи в текст:
+
+- `transcriptions`
+
+Загрузка файлов ограничена 1 ГБ (если вам нужна поддержка файлов большего размера, вы можете написать в [Поддержку](https://t.me/RND_RandoM)). Поддерживаются следующие типы файлов: `mp3`, `wav`, `m4a`, `flac`, `ogg`, `opus`, `mp4`, `mov`, `avi` и `mkv`. Также, поддерживается отправка файлов по их ссылкам и нейронное разделение на говорящих (диаризация).
+
+## Транскрибация
+
+API транскрибации принимает на вход аудио (или видео) файл, который вы хотите транскрибировать (либо ссылку на этот файл), и желаемый формат вывода. Модель поддерживает следующие форматы вывода (`json`, `text`, `srt`, `verbose_json`, `vtt`). Подробнее о форматах вывода читайте на странице [Форматы ответа](#форматы-ответа).
+
+<Tabs items={["Python requests", "OpenAI Python", "JavaScript", "cURL"]}>
+<Tab value="Python requests">
+```python
+import requests
+
+url = "https://api.nexara.ru/api/v1/audio/transcriptions"
+api_key = "NEXARA_API_KEY"  # Замените своим настоящим ключом
+
+headers = {
+    "Authorization": f"Bearer {api_key}",
+}
+
+file_path = "audio/example.mp3"
+
+with open(file_path, "rb") as audio_file:
+    files = {
+        "file": (file_path, audio_file, "audio/mp3"),
+    }
+
+    data = {
+        "response_format": "json",
+        # "task": "diarize" # если вы хотите выполнить диаризацию
+    }
+
+    response = requests.post(url, headers=headers, files=files, data=data)
+
+    transcription = response.json()
+    print(transcription)
+```
+</Tab>
+<Tab value="OpenAI Python">
+```python
+# Внимание: OpenAI SDK не поддерживает диаризацию и ссылки на файлы.
+
+client = OpenAI(
+    base_url="https://api.nexara.ru/api/v1",
+    api_key="NEXARA_API_KEY",
+)
+
+with open("audio/example.mp3", "rb") as audio_file:
+    transcription = client.audio.transcriptions.create(
+        model="whisper-1",
+        file=audio_file
+    )
+
+print(transcription)
+```
+</Tab>
+<Tab value="JavaScript">
+```javascript
+async function transcribeAudio(audioFile, apiKey) {
+  const url = "https://api.nexara.ru/api/v1/audio/transcriptions";
+
+  const formData = new FormData();
+  formData.append("file", audioFile);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: formData,
+    });
+
+    const transcription = await response.json();
+    return transcription;
+  } catch (error) {
+    console.error("Ошибка транскрибации:", error);
+    throw error;
+  }
+}
+
+document
+  .getElementById("fileInput")
+  .addEventListener("change", async (event) => {
+    const apiKey = "NEXARA_API_KEY";
+    const audioFile = event.target.files[0];
+
+    try {
+      const result = await transcribeAudio(audioFile, apiKey);
+      console.log(result);
+    } catch (error) {
+      console.error("Ошибка обработки аудио:", error);
+    }
+  });
+```
+</Tab>
+<Tab value="cURL">
+```bash
+curl --request POST \
+  --url https://api.nexara.ru/api/v1/audio/transcriptions \
+  --header 'Authorization: Bearer NEXARA_API_KEY' \
+  --header 'Content-Type: multipart/form-data' \
+  --form response_format="verbose_json" \
+  --form file="@example.mp3"
+```
+</Tab>
+</Tabs>
+
+По умолчанию тип ответа будет `json`:
+
+```json
+{
+  "text": "Восемьдесят семь лет тому назад наши отцы основали на этом континенте новую нацию, зачатую в свободе и посвященную утверждению, что все люди созданы равными."
+}
+```
+
+## Поддерживаемые языки
+
+В настоящее время мы поддерживаем следующие языки через endpoint `/transcriptions`:
+
+Африкаанс, Арабский, Армянский, Азербайджанский, Белорусский, Боснийский, Болгарский, Каталанский, Китайский, Хорватский, Чешский, Датский, Нидерландский, Английский, Эстонский, Финский, Французский, Галисийский, Немецкий, Греческий, Иврит, Хинди, Венгерский, Исландский, Индонезийский, Итальянский, Японский, Каннада, Казахский, Корейский, Латышский, Литовский, Македонский, Малайский, Маратхи, Маори, Непальский, Норвежский, Персидский, Польский, Португальский, Румынский, Русский, Сербский, Словацкий, Словенский, Испанский, Суахили, Шведский, Тагальский, Тамильский, Тайский, Турецкий, Украинский, Урду, Вьетнамский и Валлийский.
+
+Хотя модель была обучена на 98 языках, список выше содержит только языки, у которых Word Error Rate (WER) не больше 50%. Полный список языков и их кодов в формате ISO-639-1 смотрите на странице [Supported Languages](#поддерживаемые-языки).
+
+## Временные метки
+
+Чтобы получить временные метки вместе с результатом, вы можете использовать параметр `timestamp_granularities[]`. Для того, чтобы использовать эту функцию, установите `verbose_json` в параметре `response_format`. Для получения более подробной информации посетите [Документацию API](/api-reference/create_transcription_audio_transcriptions_post).
+
+В настоящее время доступны два уровня детализации временных меток:
+
+1. **Уровень `segment`:**
+   - **Как запросить:** Добавьте параметр `timestamp_granularities[]='segment'` в API-запрос вместе с `response_format='verbose_json'`.
+   - **Что возвращается:** В ответе формата `verbose_json` будет массив `segments`. Каждый элемент этого массива представляет собой 30-секундный фрагмент аудио и содержит: время начала (`start`), время окончания (`end`), транскрибированный текст (`text`) для данного сегмента.
+
+2. **Уровень `word`:**
+   - **Как запросить:** Добавьте `timestamp_granularities[]='word'` в запрос (также с `response_format='verbose_json'`).
+   - **Что возвращается:** Это самый подробный уровень временных меток. В ответе вы получите массив `words`, где каждый объект содержит отдельное слово с точными временами начала (`start`) и окончания (`end`) в секундах, а также массив `segments`.
+
+**В итоге:**
+
+- Используйте `segment`, если вам нужно примерное разбиение по времени.
+- Используйте `word`, если вам нужны точные времена начала/конца для отдельных слов.
+- Помните, что для обоих вариантов нужен `response_format='verbose_json'`.
+
+<Tabs items={["Python requests", "OpenAI Python", "JavaScript", "cURL"]}>
+<Tab value="Python requests">
+```python
+import requests
+
+url = "https://api.nexara.ru/api/v1/audio/transcriptions"
+api_key = "NEXARA_API_KEY"
+
+headers = {
+    "Authorization": f"Bearer {api_key}",
+}
+
+file_path = "audio/example.mp3"
+
+with open(file_path, "rb") as audio_file:
+    files = {
+        "file": (file_path, audio_file, "audio/mp3"),
+    }
+    data = {
+        "response_format": "verbose_json",
+        "timestamp_granularities[]": "word",
+    }
+
+    response = requests.post(url, headers=headers, files=files, data=data)
+
+    transcription = response.json()
+    print(transcription)
+```
+</Tab>
+<Tab value="OpenAI Python">
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.nexara.ru/api/v1",
+    api_key="NEXARA_API_KEY",
+)
+
+with open("audio/example.mp3", "rb") as audio_file:
+    transcription = client.audio.transcriptions.create(
+        model="whisper-1",
+        file=audio_file,
+        response_format="verbose_json",
+        timestamp_granularities=["word"]
+    )
+
+print(transcription)
+```
+</Tab>
+<Tab value="JavaScript">
+```javascript
+async function transcribeAudio(audioFile, apiKey) {
+  const url = "https://api.nexara.ru/api/v1/audio/transcriptions";
+
+  const formData = new FormData();
+  formData.append("file", audioFile);
+  formData.append("response_format", "verbose_json");
+  formData.append("timestamp_granularities[]", "word");
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: formData,
+    });
+
+    const transcription = await response.json();
+    return transcription;
+  } catch (error) {
+    console.error("Ошибка транскрибации:", error);
+    throw error;
+  }
+}
+```
+</Tab>
+<Tab value="cURL">
+```bash
+curl --request POST \
+  --url https://api.nexara.ru/api/v1/audio/transcriptions \
+  --header 'Authorization: Bearer NEXARA_API_KEY' \
+  --header 'Content-Type: multipart/form-data' \
+  --form response_format="verbose_json" \
+  --form 'timestamp_granularities[]="word"' \
+  --form file="@example.mp3"
+```
+</Tab>
+</Tabs>
+
+Пример вывода:
+
+```json
+{
+  "duration": 109.69609977324264,
+  "language": "en",
+  "task": "transcribe",
+  "text": "Four score and seven years ago, our fathers brought forth on this continent a new nation...",
+  "words": [
+    { "end": 0.62, "prob": 0.07, "start": 0, "word": "Four" },
+    { "end": 1.12, "prob": 0.21, "start": 0.62, "word": "score" },
+    { "end": 1.44, "prob": 0.84, "start": 1.12, "word": "and" },
+    { "end": 1.82, "prob": 0.95, "start": 1.44, "word": "seven" },
+    { "end": 2.18, "prob": 0.99, "start": 1.82, "word": "years" },
+    { "end": 3.54, "prob": 0.68, "start": 2.18, "word": "ago," }
+  ],
+  "segments": [
+    {
+      "avg_logprob": -1,
+      "compression_ratio": 2.4,
+      "end": 29,
+      "id": 0,
+      "no_speech_prob": 0.5,
+      "seek": 0,
+      "start": 0,
+      "temperature": 1,
+      "text": "Four score and seven years ago, our fathers brought forth on this continent a new nation..."
+    }
+  ]
+}
+```
+
+## Форматы ответа
+
+API Nexara позволяет указать формат, в котором вы хотите получить результаты. Используя параметр `response_format` в вашем запросе, вы можете настроить вывод так, чтобы он наилучшим образом соответствовал вашим потребностям.
+
+API поддерживает следующие форматы вывода:
+
+- **`json`:** Возвращает стандартный JSON-объект, содержащий транскрибированный текст.
+- **`text`:** Возвращает транскрипцию в виде одной строки простого текста.
+- **`verbose_json`:** Возвращает подробный JSON-объект, содержащий текст, язык, продолжительность, а также, возможно, временные метки.
+- **`srt`:** Возвращает транскрипцию, отформатированную как файл субтитров SRT.
+- **`vtt`:** Возвращает транскрипцию, отформатированную как файл субтитров WebVTT.
+
+<Callout type="warn">
+Когда запрашиваете ответ в формате субтитров (`srt` или `vtt`) **не** используйте `response.text` если делаете запрос через `request` библиотеку в Python. Используйте `response.json`, как и для остальных форматов ответа.
+</Callout>
+
+## Диаризация
+
+API Nexara поддерживает нейронное разделение на говорящих (диаризацию). Диаризация — это процесс разделения аудио на отдельные голоса, иными словами, определение, кто, когда и что говорит.
+
+Также вы можете использовать параметр `num_speakers` для указания количества говорящих в аудиофайле. Обратите внимание, что этот параметр не гарантирует, что вы получите ровно столько говорящих, сколько указали вы, но помогает модели определить, сколько говорящих в аудиофайле.
+
+Модель поддерживает три режима диаризации:
+
+- `general`: Общий режим.
+- `meeting`: Режим для встреч.
+- `telephonic`: Режим для телефонных разговоров.
+
+Обратите внимание, что диаризация — более ресурсоемкая операция, чем транскрибация. Поэтому, время выполнения запроса может быть больше. Стоимость минуты аудио при диаризации — **0,72 ₽ / мин**.
+
+<Tabs items={["Python requests", "cURL"]}>
+<Tab value="Python requests">
+```python
+import requests
+
+url = "https://api.nexara.ru/api/v1/audio/transcriptions"
+api_key = "NEXARA_API_KEY"
+
+headers = {
+    "Authorization": f"Bearer {api_key}",
+}
+
+file_path = "audio/example.mp3"
+
+with open(file_path, "rb") as audio_file:
+    files = {
+        "file": (file_path, audio_file, "audio/mp3"),
+    }
+
+    data = {
+        "task": "diarize",
+        # "num_speakers": 2,
+        # "diarization_setting": "telephonic"
+    }
+
+    response = requests.post(url, headers=headers, files=files, data=data)
+
+    transcription = response.json()
+    print(transcription)
+```
+</Tab>
+<Tab value="cURL">
+```bash
+curl --request POST \
+  --url https://api.nexara.ru/api/v1/audio/transcriptions \
+  --header 'Authorization: Bearer NEXARA_API_KEY' \
+  --header 'Content-Type: multipart/form-data' \
+  --form task="diarize" \
+  --form file="@example.mp3"
+```
+</Tab>
+</Tabs>
+
+Ответ содержит следующие поля:
+
+- `task`: Тип задачи.
+- `language`: Язык аудиофайла.
+- `duration`: Продолжительность аудиофайла.
+- `text`: Транскрибированный текст.
+- `segments`: Сегменты аудиофайла с информацией о начале, конце сегмента, ID говорящего и тексте.
+
+Когда вы запрашиваете диаризацию, API всегда будет возвращать следующий JSON, вне зависимости от параметра `response_format`:
+
+```json
+{
+  "task": "diarize",
+  "language": "en",
+  "duration": 9.12,
+  "text": "The beach was a popular spot on a hot summer day. People were swimming in the ocean, building sandcastles, and playing beach volleyball.",
+  "segments": [
+    {
+      "speaker": "speaker_0",
+      "start": 0.0,
+      "end": 5.0,
+      "text": "The beach was a popular spot on a hot summer day."
+    },
+    {
+      "speaker": "speaker_1",
+      "start": 5.0,
+      "end": 9.12,
+      "text": "People were swimming in the ocean, building sandcastles, and playing beach volleyball."
+    }
+  ]
+}
+```
+
+<Callout type="info">
+Обратите внимание, что Nexara не поддерживает канальную диаризацию. Это означает, что API будет игнорировать стерео информацию и идентифицировать говорящих на основе содержимого аудиофайла.
+</Callout>

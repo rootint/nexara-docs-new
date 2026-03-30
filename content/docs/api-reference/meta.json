@@ -1,0 +1,11 @@
+{
+  "title": "API Reference",
+  "root": true,
+  "pages": [
+    "index",
+    "create_transcription_audio_transcriptions_post",
+    "listModels",
+    "getModel",
+    "getBalance"
+  ]
+}

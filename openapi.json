@@ -1,0 +1,694 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Nexara API для транскрибации речи",
+        "description": "API Nexara для транскрибации аудио, диаризации и генерации субтитров.",
+        "license": {
+            "name": "MIT"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "https://api.nexara.ru/api/v1"
+        }
+    ],
+    "security": [
+        {
+            "bearerAuth": []
+        }
+    ],
+    "paths": {
+        "/models": {
+            "get": {
+                "summary": "Список доступных моделей",
+                "operationId": "listModels",
+                "responses": {
+                    "200": {
+                        "description": "Список доступных моделей",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "object": {
+                                            "type": "string",
+                                            "example": "list"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "whisper-1"
+                                                    },
+                                                    "object": {
+                                                        "type": "string",
+                                                        "example": "model"
+                                                    },
+                                                    "created": {
+                                                        "type": "integer",
+                                                        "example": 1686935002
+                                                    },
+                                                    "owned_by": {
+                                                        "type": "string",
+                                                        "example": "nexara"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/models/{model}": {
+            "get": {
+                "summary": "Получить информацию о модели",
+                "operationId": "getModel",
+                "parameters": [
+                    {
+                        "name": "model",
+                        "in": "path",
+                        "required": true,
+                        "description": "Идентификатор модели для получения информации",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Детали модели",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "example": "whisper-1"
+                                        },
+                                        "object": {
+                                            "type": "string",
+                                            "example": "model"
+                                        },
+                                        "created": {
+                                            "type": "integer",
+                                            "example": 1686935002
+                                        },
+                                        "owned_by": {
+                                            "type": "string",
+                                            "example": "nexara"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Модель не найдена"
+                    }
+                }
+            }
+        },
+        "/billing/balance": {
+            "get": {
+                "tags": [
+                    "Billing"
+                ],
+                "summary": "Получить баланс",
+                "description": "Получить текущий баланс, цену за минуту и валюту пользователя.",
+                "operationId": "getBalance",
+                "responses": {
+                    "200": {
+                        "description": "Детализация баланса пользователя.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "balance": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "description": "Текущий баланс на счете.",
+                                            "example": 100.00
+                                        },
+                                        "rate_per_min": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "description": "Цена за минуту транскрибации.",
+                                            "example": 0.36
+                                        },
+                                        "currency": {
+                                            "type": "string",
+                                            "description": "Валюта пользователя.",
+                                            "example": "RUB"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "API ключ не найден."
+                    }
+                }
+            }
+        },
+        "/audio/transcriptions": {
+            "post": {
+                "tags": [
+                    "Аудио"
+                ],
+                "summary": "Транскрибирует аудио",
+                "description": "Транскрибирует аудио из предоставленного аудиофайла. Также поддерживает диаризацию.",
+                "operationId": "create_transcription_audio_transcriptions_post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TranscriptionFormDataRequest"
+                            },
+                            "encoding": {
+                                "timestamp_granularities": {
+                                    "style": "form",
+                                    "explode": false
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Успешный ответ транскрибации или диаризации. Формат зависит от параметра 'response_format'.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TranscriptionResponseJson"
+                                },
+                                "examples": {
+                                    "verbose_json_example": {
+                                        "value": {
+                                            "task": "transcribe",
+                                            "language": "ru",
+                                            "duration": 9.12,
+                                            "text": "Пляж был популярным местом в жаркий летний день. Люди купались в океане, строили замки из песка и играли в пляжный волейбол.",
+                                            "segments": [
+                                                {
+                                                    "id": 0,
+                                                    "seek": 0,
+                                                    "start": 0.0,
+                                                    "end": 3.319999933242798,
+                                                    "text": "Пляж был популярным местом в жаркий летний день.",
+                                                    "tokens": [
+                                                        50364,
+                                                        2903,
+                                                        1127,
+                                                        353,
+                                                        13519,
+                                                        833,
+                                                        287,
+                                                        457,
+                                                        2483,
+                                                        741,
+                                                        1125,
+                                                        13,
+                                                        50530
+                                                    ],
+                                                    "temperature": 0.0,
+                                                    "avg_logprob": 0.0,
+                                                    "compression_ratio": 0.0,
+                                                    "no_speech_prob": 0.0
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "json_example": {
+                                        "value": {
+                                            "text": "Привет, мир."
+                                        }
+                                    },
+                                    "diarization_example": {
+                                        "value": {
+                                            "task": "diarize",
+                                            "language": "en",
+                                            "duration": 9.12,
+                                            "text": "The beach was a popular spot on a hot summer day. People were swimming in the ocean, building sandcastles, and playing beach volleyball.",
+                                            "segments": [
+                                                {
+                                                    "speaker": "speaker_0",
+                                                    "start": 0.00,
+                                                    "end": 5.00,
+                                                    "text": "The beach was a popular spot on a hot summer day."
+                                                },
+                                                {
+                                                    "speaker": "speaker_1",
+                                                    "start": 5.00,
+                                                    "end": 9.12,
+                                                    "text": "People were swimming in the ocean, building sandcastles, and playing beach volleyball."
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            },
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string",
+                                    "example": "Диктор 1: Здравствуйте. Диктор 2: Мир."
+                                }
+                            },
+                            "application/srt": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "srt",
+                                    "example": "1\n00:00:00,500 --> 00:00:01,800\n[ДИКТОР_01] Здравствуйте.\n\n2\n00:00:02,100 --> 00:00:03,000\n[ДИКТОР_02] Мир.\n\n"
+                                }
+                            },
+                            "application/vtt": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "vtt",
+                                    "example": "WEBVTT\n\n00:00:00.500 --> 00:00:01.800\n<v ДИКТОР_01>Здравствуйте.</v>\n\n00:00:02.100 --> 00:00:03.000\n<v ДИКТОР_02>Мир.</v>\n\n"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос (Bad Request) - Ошибка на стороне клиента из-за неверных входных данных, неподдерживаемых опций, недостаточной минимальной длительности или несовместимых параметров.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorDetail"
+                                },
+                                "examples": {
+                                    "invalid_audio_file": {
+                                        "summary": "Ошибка обработки аудио",
+                                        "value": {
+                                            "detail": "Ошибка обработки аудиофайла: Неверный формат"
+                                        }
+                                    },
+                                    "unsupported_language": {
+                                        "summary": "Неподдерживаемый язык",
+                                        "value": {
+                                            "detail": "Язык 'xx' не поддерживается. См. список поддерживаемых языков на [URL вашей документации на русском]."
+                                        }
+                                    },
+                                    "unsupported_response_format": {
+                                        "summary": "Неподдерживаемый формат ответа",
+                                        "value": {
+                                            "detail": "Формат ответа 'xml' не поддерживается. Поддерживаемые форматы: ['json', 'text', 'verbose_json', 'srt', 'vtt']."
+                                        }
+                                    },
+                                    "diarization_too_short": {
+                                        "summary": "Аудио слишком короткое для диаризации",
+                                        "value": {
+                                            "detail": "Минимальная длительность аудио для диаризации - 3 секунды."
+                                        }
+                                    },
+                                    "audio_too_short": {
+                                        "summary": "Аудио слишком короткое (Общее)",
+                                        "value": {
+                                            "detail": "Минимальная длительность аудио - 0.3 секунды."
+                                        }
+                                    },
+                                    "unsupported_task": {
+                                        "summary": "Неподдерживаемая задача",
+                                        "value": {
+                                            "detail": "Задача 'summarize' не поддерживается. Поддерживаемые задачи: ['transcribe', 'diarize']."
+                                        }
+                                    },
+                                    "unsupported_diarization_format": {
+                                        "summary": "Неподдерживаемый формат для диаризации",
+                                        "value": {
+                                            "detail": "Формат ответа 'text' не поддерживается при диаризации. Поддерживаемые форматы: ['json', 'verbose_json', 'srt', 'vtt']."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Не авторизован (Unauthorized) - Отсутствует или недействителен Bearer токен.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorDetail"
+                                },
+                                "examples": {
+                                    "invalid_token": {
+                                        "summary": "Недействительный токен",
+                                        "value": {
+                                            "detail": "Учетные данные для аутентификации не предоставлены или недействительны."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "402": {
+                        "description": "Требуется оплата (Payment Required) - Недостаточно средств на счете для обработки запроса.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorDetail"
+                                },
+                                "examples": {
+                                    "insufficient_funds": {
+                                        "summary": "Недостаточно средств",
+                                        "value": {
+                                            "detail": "Недостаточно средств на счете."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Ошибка валидации (Validation Error) - Тело запроса синтаксически корректно, но семантически неверно (например, отсутствует обязательное поле формы, неверный тип данных).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Превышен лимит запросов (Rate Limit Exceeded) - Отправлено слишком много запросов за определенный промежуток времени.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorDetail"
+                                },
+                                "examples": {
+                                    "rate_limit": {
+                                        "summary": "Лимит запросов превышен",
+                                        "value": {
+                                            "detail": "Превышен лимит запросов"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "TranscriptionFormDataRequest": {
+                "type": "object",
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "format": "binary",
+                        "nullable": true,
+                        "description": "Объект аудиофайла (не имя файла) для транскрибации, в одном из поддерживаемых форматов. Обязательно должен быть отправлен `file` или  `url` в запросе."
+                    },
+                    "url": {
+                        "type": "string",
+                        "example": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Gettysburg_by_Britton.ogg",
+                        "nullable": true,
+                        "description": "Ссылка на аудиофайл, в одном из поддерживаемых форматов. Эта опция не поддерживается OpenAI SDK. Обязательно должен быть отправлен `file` или  `url` в запросе."
+                    },
+                    "task": {
+                        "type": "string",
+                        "description": "Задача для выполнения. В настоящее время поддерживается только 'transcribe' или 'diarize'. `transcribe` - транскрибация аудио, `diarize` - разделение аудио на сегменты по говорящим.",
+                        "enum": [
+                            "transcribe",
+                            "diarize"
+                        ],
+                        "default": "transcribe",
+                        "example": "transcribe"
+                    },
+                    "model": {
+                        "type": "string",
+                        "description": "Идентификатор используемой модели. В настоящее время доступна только `whisper-1`.",
+                        "default": "whisper-1",
+                        "example": "whisper-1"
+                    },
+                    "language": {
+                        "type": "string",
+                        "description": "Язык входного аудио (формат ISO-639-1). Определяется автоматически, если не указан.",
+                        "nullable": true,
+                        "example": "ru"
+                    },
+                    "response_format": {
+                        "type": "string",
+                        "description": "Формат вывода транскрипции. Форматы `srt` и `vtt` возвращают готовые к использованию форматированные субтитры. Если `task` - `diarize`, то всегда будет возвращаться JSON объект. Пример смотрите в правой колонке.",
+                        "enum": [
+                            "json",
+                            "text",
+                            "srt",
+                            "verbose_json",
+                            "vtt"
+                        ],
+                        "default": "json",
+                        "example": "verbose_json"
+                    },
+                    "num_speakers": {
+                        "type": "number",
+                        "description": "Количество говорящих в аудио. Если не указано, то будет определено автоматически. Обратите внимание, что этот параметр не гарантирует правильное количество говорящих, но может помочь модели. Параметр игнорируется, если `task` - `transcribe`.",
+                        "default": null,
+                        "nullable": true,
+                        "example": 2
+                    },
+                    "diarization_setting": {
+                        "type": "string",
+                        "description": "Настройки для модели диаризации. `general` - для большинства случаев, `meeting` - для встреч, `telephonic` - для телефонных разговоров. Параметр игнорируется, если `task` - `transcribe`.",
+                        "enum": [
+                            "general",
+                            "meeting",
+                            "telephonic"
+                        ],
+                        "default": "general",
+                        "example": "telephonic"
+                    },
+                    "timestamp_granularities[]": {
+                        "type": "string",
+                        "enum": [
+                            "segment",
+                            "word"
+                        ],
+                        "description": "Гранулярность временных меток для включения. `word` требует, чтобы `response_format` был `verbose_json`.",
+                        "default": "segment",
+                        "example": "segment"
+                    }
+                }
+            },
+            "TranscriptionSegment": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "description": "Уникальный идентификатор сегмента.",
+                        "type": "integer"
+                    },
+                    "seek": {
+                        "description": "Смещение (seek) сегмента.",
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "start": {
+                        "description": "Время начала сегмента в секундах.",
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "end": {
+                        "description": "Время окончания сегмента в секундах.",
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "text": {
+                        "description": "Текстовое содержимое сегмента.",
+                        "type": "string"
+                    },
+                    "tokens": {
+                        "description": "Массив идентификаторов токенов для текстового содержимого.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "temperature": {
+                        "description": "В настоящее время является заглушкой для совместимости с пакетами OpenAI.",
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "avg_logprob": {
+                        "description": "В настоящее время является заглушкой для совместимости с пакетами OpenAI.",
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "compression_ratio": {
+                        "description": "В настоящее время является заглушкой для совместимости с пакетами OpenAI.",
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "no_speech_prob": {
+                        "description": "В настоящее время является заглушкой для совместимости с пакетами OpenAI.",
+                        "type": "number",
+                        "format": "float"
+                    }
+                },
+                "required": [
+                    "id",
+                    "seek",
+                    "start",
+                    "end",
+                    "text",
+                    "tokens",
+                    "temperature",
+                    "avg_logprob",
+                    "compression_ratio",
+                    "no_speech_prob"
+                ]
+            },
+            "TranscriptionWord": {
+                "type": "object",
+                "properties": {
+                    "word": {
+                        "description": "Само слово.",
+                        "type": "string"
+                    },
+                    "start": {
+                        "description": "Время начала слова в секундах.",
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "end": {
+                        "description": "Время окончания слова в секундах.",
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "prob": {
+                        "description": "Уровень уверенности (вероятность) в точности распознанного слова.",
+                        "type": "number",
+                        "format": "float"
+                    }
+                },
+                "required": [
+                    "word",
+                    "start",
+                    "end",
+                    "prob"
+                ]
+            },
+            "TranscriptionResponseJson": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "description": "Полный транскрибированный текст.",
+                        "type": "string"
+                    },
+                    "task": {
+                        "description": "Задача, которая была выполнена. В настоящее время всегда возвращает `transcribe`.",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "language": {
+                        "description": "Язык входного аудио.",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "duration": {
+                        "description": "Длительность входного аудио.",
+                        "type": "number",
+                        "format": "float",
+                        "nullable": true
+                    },
+                    "segments": {
+                        "description": "Сегменты транскрибированного текста и их детали.",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TranscriptionSegment"
+                        },
+                        "nullable": true
+                    },
+                    "words": {
+                        "description": "Извлеченные слова и соответствующие им временные метки.",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TranscriptionWord"
+                        },
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "text"
+                ]
+            },
+            "ErrorDetail": {
+                "type": "object",
+                "properties": {
+                    "detail": {
+                        "type": "string",
+                        "description": "Детали сообщения об ошибке"
+                    }
+                },
+                "required": [
+                    "detail"
+                ]
+            },
+            "ValidationError": {
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "properties": {
+                    "loc": {
+                        "type": "array",
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "description": "Местоположение ошибки"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "Сообщение об ошибке"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Тип ошибки"
+                    }
+                }
+            },
+            "HTTPValidationError": {
+                "type": "object",
+                "properties": {
+                    "detail": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "description": "Список ошибок валидации"
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "description": "Используйте ваш API-ключ как Bearer токен в заголовке Authorization. Пример: `Authorization: Bearer nx-yourkey`"
+            }
+        }
+    }
+}
