@@ -74,7 +74,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="ru" className={`${golosText.className} dark`} suppressHydrationWarning>
       <body className="flex flex-col min-h-screen">
-        <RootProvider>
+        <RootProvider theme={{ forcedTheme: 'dark' }}>
           <BackgroundBlobs />
           {children}
         </RootProvider>
